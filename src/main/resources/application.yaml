@@ -16,6 +16,7 @@ spring:
       hibernate:
         dialect: org.hibernate.dialect.MariaDBDialect
         format_sql: true
+
 logging:
   level:
     root: ERROR
