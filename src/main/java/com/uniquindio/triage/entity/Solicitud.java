@@ -40,7 +40,7 @@ public class Solicitud {
     @Column(nullable = false, length = 10)
     private Prioridad prioridad = Prioridad.MEDIA;
 
-    @Column(name = "justificacion_prioridad", nullable = false, length = 255)
+    @Column(name = "justificacion_prioridad", nullable = true, length = 255)
     private String justificacionPrioridad;
 
     @Column(name = "observacion_cierre", columnDefinition = "TEXT")

@@ -35,6 +35,7 @@ public class SolicitudService {
         solicitud.setSolicitante(solicitante);
         solicitud.setEstado(EstadoSolicitud.REGISTRADA);
         solicitud.setPrioridad(Prioridad.MEDIA);
+        solicitud.setJustificacionPrioridad("Pendiente de clasificación");
 
         solicitudRepository.save(solicitud);
 
