@@ -1,5 +1,6 @@
 package com.uniquindio.triage.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.uniquindio.triage.enums.*;
 import jakarta.persistence.*;
 import lombok.Data;
@@ -51,14 +52,14 @@ public class Solicitud {
     @Column(name = "fecha_cierre")
     private LocalDateTime fechaCierre;
 
-    // Relación con Usuario — solicitante (siempre existe)
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "solicitante_id", nullable = false)
+    @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
     private Usuario solicitante;
 
-    // Relación con Usuario — responsable (puede ser null)
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "responsable_id", nullable = true)
+    @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
     private Usuario responsable;
 
     @PrePersist

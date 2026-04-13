@@ -1,5 +1,6 @@
 package com.uniquindio.triage.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -28,14 +29,14 @@ public class HistorialSolicitud {
     @Column(name = "fecha_accion", nullable = false, updatable = false)
     private LocalDateTime fechaAccion;
 
-    // Relación con Solicitud — siempre existe (composición)
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "solicitud_id", nullable = false)
+    @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
     private Solicitud solicitud;
 
-    // Relación con Usuario — quién ejecutó la acción
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "usuario_id", nullable = false)
+    @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
     private Usuario usuario;
 
     @PrePersist

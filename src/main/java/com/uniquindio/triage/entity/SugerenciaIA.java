@@ -1,5 +1,6 @@
 package com.uniquindio.triage.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.uniquindio.triage.enums.Prioridad;
 import com.uniquindio.triage.enums.TipoSolicitud;
 import jakarta.persistence.*;
@@ -38,9 +39,9 @@ public class SugerenciaIA {
     @Column(name = "fecha_sugerencia", nullable = false, updatable = false)
     private LocalDateTime fechaSugerencia;
 
-    // Relación con Solicitud — una sugerencia pertenece a una sola solicitud
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "solicitud_id", nullable = false, unique = true)
+    @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
     private Solicitud solicitud;
 
     @PrePersist

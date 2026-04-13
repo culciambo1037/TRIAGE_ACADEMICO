@@ -16,7 +16,11 @@ spring:
       hibernate:
         dialect: org.hibernate.dialect.MariaDBDialect
         format_sql: true
-        globally_quoted_identifiers: true # Permite crear UUID
+logging:
+  level:
+    root: ERROR
+    com.uniquindio.triage: DEBUG
+    org.springframework.security: DEBUG
 
 server:
   port: 8080

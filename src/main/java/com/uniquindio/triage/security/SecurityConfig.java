@@ -29,41 +29,45 @@ public class SecurityConfig {
                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
 
-                // Público — solo login
-                .requestMatchers("/api/auth/login").permitAll()
+                // Público
+                .requestMatchers(HttpMethod.POST, "/api/auth/login").permitAll()
+                .requestMatchers(HttpMethod.POST, "/api/usuarios").permitAll()
 
                 // Autenticación
-                .requestMatchers("/api/auth/logout").authenticated()
+                .requestMatchers(HttpMethod.POST, "/api/auth/logout").authenticated()
 
                 // Solicitudes
-                .requestMatchers(HttpMethod.POST, "/api/solicitudes")
+                .requestMatchers(HttpMethod.POST,  "/api/solicitudes")
                     .hasAnyRole("ESTUDIANTE", "RESPONSABLE", "ADMIN")
-                .requestMatchers(HttpMethod.GET, "/api/solicitudes")
+                .requestMatchers(HttpMethod.GET,   "/api/solicitudes")
                     .hasAnyRole("RESPONSABLE", "ADMIN")
-                .requestMatchers(HttpMethod.GET, "/api/solicitudes/**")
+                .requestMatchers(HttpMethod.GET,   "/api/solicitudes/*")
                     .hasAnyRole("ESTUDIANTE", "RESPONSABLE", "ADMIN")
-                .requestMatchers(HttpMethod.PATCH, "/api/solicitudes/**/clasificar")
+                .requestMatchers(HttpMethod.PATCH, "/api/solicitudes/*/clasificar")
                     .hasAnyRole("RESPONSABLE", "ADMIN")
-                .requestMatchers(HttpMethod.PATCH, "/api/solicitudes/**/asignar")
+                .requestMatchers(HttpMethod.PATCH, "/api/solicitudes/*/asignar")
                     .hasRole("ADMIN")
-                .requestMatchers(HttpMethod.PATCH, "/api/solicitudes/**/estado")
+                .requestMatchers(HttpMethod.PATCH, "/api/solicitudes/*/estado")
                     .hasAnyRole("RESPONSABLE", "ADMIN")
-                .requestMatchers(HttpMethod.PATCH, "/api/solicitudes/**/cerrar")
+                .requestMatchers(HttpMethod.PATCH, "/api/solicitudes/*/cerrar")
                     .hasAnyRole("RESPONSABLE", "ADMIN")
 
                 // Historial
-                .requestMatchers("/api/solicitudes/**/historial")
+                .requestMatchers(HttpMethod.GET, "/api/solicitudes/*/historial")
                     .hasAnyRole("RESPONSABLE", "ADMIN")
 
                 // Usuarios
-                .requestMatchers("/api/usuarios/**")
+                .requestMatchers(HttpMethod.GET,   "/api/usuarios/responsables")
+                    .hasRole("ADMIN")
+                .requestMatchers(HttpMethod.PATCH, "/api/usuarios/*/estado")
                     .hasRole("ADMIN")
 
                 // IA
-                .requestMatchers("/api/ia/**")
+                .requestMatchers(HttpMethod.POST, "/api/ia/sugerir")
+                    .hasAnyRole("RESPONSABLE", "ADMIN")
+                .requestMatchers(HttpMethod.POST, "/api/ia/resumen/*")
                     .hasAnyRole("RESPONSABLE", "ADMIN")
 
-                // Cualquier otra petición requiere autenticación
                 .anyRequest().authenticated()
             )
             .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
