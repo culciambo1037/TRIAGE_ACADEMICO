@@ -10,10 +10,12 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
+import org.springframework. transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.UUID;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class SolicitudService {
@@ -73,17 +75,15 @@ public class SolicitudService {
 
     // GET /api/solicitudes/{id} (RF-07)
     public SolicitudDTO obtener(UUID id, Usuario usuarioActual) {
-        Solicitud solicitud = buscarEntidad(id);
-
-        // ESTUDIANTE solo puede ver sus propias solicitudes
-        if (usuarioActual.getRol() == RolUsuario.ESTUDIANTE) {
-            if (!solicitud.getSolicitante().getId().equals(usuarioActual.getId())) {
-                throw new ForbiddenException("Solo puedes consultar tus propias solicitudes");
-            }
+    Solicitud solicitud = buscarEntidad(id);
+    if (usuarioActual.getRol() == RolUsuario.ESTUDIANTE) {
+        if (!solicitud.getSolicitante().getId().equals(usuarioActual.getId())) {
+            throw new ForbiddenException("Solo puedes consultar tus propias solicitudes");
         }
-
-        return toDTO(solicitud);
     }
+
+    return toDTO(solicitud);
+}
 
     // PATCH /api/solicitudes/{id}/clasificar (RF-02, RF-03)
     @Transactional
