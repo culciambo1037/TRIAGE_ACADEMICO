@@ -13,7 +13,6 @@ public class ClasificarRequest {
     @NotNull(message = "El tipo de solicitud es obligatorio")
     private TipoSolicitud tipoSolicitud;
 
-    @NotNull(message = "La prioridad es obligatoria")
     private Prioridad prioridad;
 
     @NotBlank(message = "La justificación de prioridad es obligatoria")

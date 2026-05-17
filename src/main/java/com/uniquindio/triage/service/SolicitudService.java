@@ -10,10 +10,11 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
-import org.springframework. transaction.annotation.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.UUID;
 import lombok.extern.slf4j.Slf4j;
+import com.uniquindio.triage.repository.ReglasPriorizacionRepository;
 
 @Slf4j
 @Service
@@ -23,6 +24,7 @@ public class SolicitudService {
     private final SolicitudRepository solicitudRepository;
     private final UsuarioService usuarioService;
     private final HistorialService historialService;
+    private final ReglasPriorizacionRepository reglasPriorizacionRepository;
 
     // POST /api/solicitudes (RF-01)
     @Transactional
@@ -90,22 +92,35 @@ public class SolicitudService {
     public SolicitudDTO clasificar(UUID id, ClasificarRequest request, Usuario usuarioActual) {
         Solicitud solicitud = buscarEntidad(id);
 
-        // Validación de transición
         if (solicitud.getEstado() != EstadoSolicitud.REGISTRADA) {
             throw new ConflictException("Solo se puede clasificar una solicitud en estado REGISTRADA");
         }
 
         solicitud.setTipoSolicitud(request.getTipoSolicitud());
-        solicitud.setPrioridad(request.getPrioridad());
+
+        // Buscar la prioridad base según las reglas de priorización
+        Prioridad prioridadFinal = reglasPriorizacionRepository
+                .findByTipoSolicitudAndActivaTrue(request.getTipoSolicitud())
+                .map(regla -> {
+                    // Si el responsable justifica una prioridad diferente, se respeta
+                    // de lo contrario se usa la prioridad base de la regla
+                    if (request.getPrioridad() != null) {
+                        return request.getPrioridad();
+                    }
+                    return regla.getPrioridadBase();
+                })
+                .orElse(request.getPrioridad() != null ? request.getPrioridad() : Prioridad.MEDIA);
+
+        solicitud.setPrioridad(prioridadFinal);
         solicitud.setJustificacionPrioridad(request.getJustificacionPrioridad());
         solicitud.setEstado(EstadoSolicitud.CLASIFICADA);
 
         solicitudRepository.save(solicitud);
 
         historialService.registrar(
-            solicitud, usuarioActual,
-            "Solicitud clasificada",
-            "Tipo: " + request.getTipoSolicitud() + " | Prioridad: " + request.getPrioridad()
+                solicitud, usuarioActual,
+                "Solicitud clasificada",
+                "Tipo: " + request.getTipoSolicitud() + " | Prioridad: " + prioridadFinal
         );
 
         return toDTO(solicitud);
@@ -147,26 +162,44 @@ public class SolicitudService {
     public SolicitudDTO cambiarEstado(UUID id, CambiarEstadoRequest request, Usuario usuarioActual) {
         Solicitud solicitud = buscarEntidad(id);
 
-        // No se puede modificar una solicitud CERRADA
-        if (solicitud.getEstado() == EstadoSolicitud.CERRADA) {
-            throw new ConflictException("La solicitud está cerrada y no puede modificarse");
+        EstadoSolicitud estadoActual = solicitud.getEstado();
+        EstadoSolicitud nuevoEstado  = request.getNuevoEstado();
+
+        // Validar que la transición sea permitida
+        if (!esTransicionValida(estadoActual, nuevoEstado, usuarioActual)) {
+            throw new ConflictException(
+                    "Transición inválida: no se puede pasar de " + estadoActual + " a " + nuevoEstado
+            );
         }
 
-        String accionAnterior = solicitud.getEstado().name();
-        solicitud.setEstado(request.getNuevoEstado());
-
+        solicitud.setEstado(nuevoEstado);
         solicitudRepository.save(solicitud);
 
         historialService.registrar(
-            solicitud, usuarioActual,
-            "Cambio de estado: " + accionAnterior + " → " + request.getNuevoEstado(),
-            request.getObservaciones()
+                solicitud, usuarioActual,
+                "Cambio de estado: " + estadoActual + " → " + nuevoEstado,
+                request.getObservaciones()
         );
-
         return toDTO(solicitud);
     }
 
-    // PATCH /api/solicitudes/{id}/cerrar (RF-08)
+    // ── Validación de transiciones permitidas ────────────────────
+    private boolean esTransicionValida(EstadoSolicitud actual,
+                                       EstadoSolicitud nuevo,
+                                       Usuario usuario) {
+        boolean esAdmin = usuario.getRol() == RolUsuario.ADMIN;
+
+        return switch (actual) {
+            case REGISTRADA  -> nuevo == EstadoSolicitud.CLASIFICADA;
+            case CLASIFICADA -> nuevo == EstadoSolicitud.EN_ATENCION
+                    || (nuevo == EstadoSolicitud.REGISTRADA && esAdmin);
+            case EN_ATENCION -> nuevo == EstadoSolicitud.ATENDIDA
+                    || (nuevo == EstadoSolicitud.CLASIFICADA && esAdmin);
+            case ATENDIDA    -> nuevo == EstadoSolicitud.CERRADA;
+            case CERRADA     -> false; // estado inmutable
+        };
+    }    // PATCH /api/solicitudes/{id}/cerrar (RF-08)
+
     @Transactional
     public SolicitudDTO cerrar(UUID id, CerrarRequest request, Usuario usuarioActual) {
         Solicitud solicitud = buscarEntidad(id);
