@@ -66,6 +66,11 @@ public class UsuarioService {
         return toDTO(usuarioRepository.save(usuario));
     }
 
+    public List<UsuarioDTO> listarTodos() {
+        return usuarioRepository.findAll()
+            .stream().map(this::toDTO).toList();
+    }
+
     // Convierte entidad → DTO
     public UsuarioDTO toDTO(Usuario u) {
         return new UsuarioDTO(
@@ -89,5 +94,10 @@ public class UsuarioService {
     public Usuario buscarPorCorreo(String correo) {
         return usuarioRepository.findByCorreo(correo)
             .orElseThrow(() -> new NotFoundException("Usuario no encontrado"));
+    }
+
+    public List<UsuarioDTO> listarEstudiantes(boolean activo) {
+    return usuarioRepository.findByRolAndActivo(RolUsuario.ESTUDIANTE, activo)
+        .stream().map(this::toDTO).toList();
     }
 }

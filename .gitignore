@@ -35,3 +35,8 @@ out/
 
 ### VS Code ###
 .vscode/
+
+triage-frontend/node_modules/
+triage-frontend/.angular/
+TRIAGE_ACADEMICO/build/
+TRIAGE_ACADEMICO/.gradle/

@@ -45,4 +45,14 @@ public class UsuarioController {
 
         return ResponseEntity.ok(usuarioService.cambiarEstado(id, request));
     }
+
+    @GetMapping("/estudiantes")
+    public ResponseEntity<List<UsuarioDTO>> listarEstudiantes() {
+        return ResponseEntity.ok(usuarioService.listarEstudiantes(true));
+    }
+
+        @GetMapping
+    public ResponseEntity<List<UsuarioDTO>> listarTodos() {
+        return ResponseEntity.ok(usuarioService.listarTodos());
+    }
 }
